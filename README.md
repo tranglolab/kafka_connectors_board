@@ -1,5 +1,5 @@
 # Kafka connector board (KCB)
-Kafka connector board is an utility application that helps you to view the status and manage the your connectors deployed in the kafka cluster.With KCB, you can search the connectors
+Kafka connector board is an utility application that helps you to view the status and manage the connectors deployed in the kafka cluster. With KCB, you can search the connectors
 by name or filtering the list by status.You can also perform operations such as start, stop, restart tasks of the selected connector tasks in bulk.
 
 It is built with Angular and consuming the rest api from kafka connect rest service.
@@ -40,3 +40,14 @@ Key in Kafka Connect REST API Host (eg: localhost:8083)  on host field and click
 ## Some notes
 
 Please make sure you have enabled the CORS on the Kafka Connect Rest API 
+
+## Running with Docker
+Images are hosted at [hub.docker.com/r/tranglolab/kafka-connector-board](https://hub.docker.com/r/tranglolab/kafka-connector-board).
+
+Launch container in background:
+```sh
+docker run -d --rm -p 8080:80 \
+    tranglolab/kafka-connector-board
+```
+
+Then access the web UI at [http://localhost:8080](http://localhost:8080).
