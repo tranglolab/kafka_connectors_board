@@ -1,0 +1,77 @@
+mat-table {
+    width: 100%;
+}
+
+.mat-toolbar{
+   background-color: black;
+   color: white;
+}
+
+.mainButton{
+    background-color: #25258b;
+    color: white;
+    margin: 3px;
+    
+}
+
+.actionButton{
+    margin: 2px; 
+    background-color: black;
+    color:white;
+    width:10em
+}
+
+.mat-form-field {
+    font-size: 20px;
+    width: 50%;
+    margin: 5px;
+}
+
+.mat-column-position{
+    flex:0.2;
+    width: 2px !important;
+}
+.mat-column-select{
+    text-align: center;
+    justify-content:center;
+}
+
+.mat-column-connectors{
+    flex:1.5;
+    text-align: left;
+    /* text-align: left;
+    justify-content:left;
+    flex: 0 0 45%; */
+}
+
+.mat-column-connector_status{
+    text-align: left;
+    justify-content:left;
+    flex: 0 0 10%;
+}
+.mat-column-task_status{
+    text-align: left;
+    justify-content:left;
+    flex: 0 0 10%;
+}
+.mat-column-worker{
+    text-align: left;
+    justify-content:left;
+    flex: 0 0 15%;  
+}
+.mat-column-action{
+    /* text-align: center;
+    justify-content:center; */
+
+    text-align: center;
+    justify-content:center;
+    flex: 0 0 5%;  
+}
+
+.mat-row:hover {
+    background-color: lightgray;
+}
+
+.container {
+    width: 1350px  !important;
+}

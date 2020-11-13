@@ -1,0 +1,186 @@
+<div>
+  <mat-toolbar class="mat-toolbar"><span>
+      <mat-label style="color: white; font-size: 20px; margin: 5px;">Currently connecting to <strong>{{host}}</strong>
+      </mat-label>
+    </span></mat-toolbar>
+</div>
+
+<div class="container" style="padding-bottom:5rem">
+  <div>
+    <mat-form-field>
+      <mat-label style="color: white;">Host</mat-label>
+      <input matInput #input placeholder="Type in to connect Eg.(trgkafka01grcxstg.tranglo.net:8083)"
+        value="{{connectorHostInput}}" required />
+    </mat-form-field>
+    <!-- <button mat-raised-button color= 'black' (click) = "clickChangeHost(input.value)" [disabled]="!input.value.length > 0" class = "mainButton">Connect</button> -->
+    <button mat-raised-button color='black' (click)="clickChangeHost(input.value)" class="mainButton">Connect</button>
+  </div>
+
+  <div>
+    <mat-form-field>
+      <mat-label style="color: white;">Filter</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Type in to search" />
+    </mat-form-field>
+
+    <button mat-raised-button (click)="selectStart()" class="mainButton" style="align-items: right;">
+      <mat-icon mat-list-icon>play_circle_outline</mat-icon> Selected
+    </button>
+    <button mat-raised-button (click)="selectPause()" class="mainButton" style="align-items: right;">
+      <mat-icon mat-list-icon>pause_circle_outline</mat-icon> Selected
+    </button>
+    <button mat-raised-button (click)="selectConnectorRestart()" class="mainButton" style="align-items: right;">
+      <mat-icon mat-list-icon>replay</mat-icon> Connnectors
+    </button>
+    <button mat-raised-button (click)="selectTaskRestart()" class="mainButton" style="align-items: right;">
+      <mat-icon mat-list-icon>replay</mat-icon> Tasks
+    </button>
+  </div>
+
+  <div>
+    <mat-form-field appearance="fill">
+      <mat-label>Tasks Status</mat-label>
+      <mat-select [(value)]="selected" (selectionChange)="selectedTaskStatus($event)">
+        <!-- <mat-option>None</mat-option> -->
+        <mat-option value="all">ALL</mat-option>
+        <mat-option value="running" style="color:green;">RUNNING</mat-option>
+        <mat-option value="paused" style="color:darkorange;">PAUSED</mat-option>
+        <mat-option value="failed" style="color: red;">FAILED</mat-option>
+        <mat-option value="undefined" style="color: darkred;">UNDEFINED</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+    <!-- Checkbox Column -->
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()">
+        </mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)" [aria-label]="checkboxLabel(row)">
+        </mat-checkbox>
+      </td>
+    </ng-container>
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="position">
+      <mat-header-cell *matHeaderCellDef> No. </mat-header-cell>
+      <mat-cell *matCellDef="let i = index"> {{i+1}} </mat-cell>
+    </ng-container>
+
+    <!-- Connectors Name Column -->
+    <ng-container matColumnDef="connectors">
+      <mat-header-cell *matHeaderCellDef> Connectors </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <a target="_blank" [routerLink]="['/display-editor',element.name]"> {{element.name}} </a>
+      </mat-cell>
+    </ng-container>
+
+    <!-- Connector Status Column -->
+    <ng-container matColumnDef="connector_status">
+      <mat-header-cell *matHeaderCellDef> Connector Status </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <div *ngIf="checkTasksStatus(element.name); else elseBlock">
+          <div *ngIf="checkTasksStatusIsRunning(element.name); else elseBlock"> <span
+              style="color:green;">{{element.connector.state}}</span>
+          </div>
+          <ng-template #elseBlock>
+            <span style="color:darkorange;">{{element.connector.state}}</span>
+          </ng-template>
+        </div>
+        <ng-template #elseBlock>
+          <a target="_blank" [routerLink]="['/display-editor',element.name,'status']"
+            style="color:red; font-weight:bold;"> FAILED </a>
+        </ng-template>
+      </mat-cell>
+    </ng-container>
+
+    <!-- Connector Tasks Status Column -->
+    <ng-container matColumnDef="task_status">
+      <mat-header-cell *matHeaderCellDef> Tasks Status </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <div *ngIf="checkTasksStatus(element.name); else elseBlock">
+          <div *ngIf="checkTasksStatusIsRunning(element.name); else elseBlock"> <span
+              style="color:green;">{{element.tasks[0].state}}</span>
+          </div>
+          <ng-template #elseBlock>
+            <span style="color:darkorange;">{{element.tasks[0].state}}</span>
+          </ng-template>
+        </div>
+        <ng-template #elseBlock>
+          <a target="_blank" [routerLink]="['/display-editor',element.name,'status']"
+            style="color:red; font-weight:bold;"> FAILED </a>
+        </ng-template>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="worker">
+      <mat-header-cell *matHeaderCellDef> Workers </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <span style="font-size:small;">{{getTaskWorker(element.name)}} </span>
+      </mat-cell>
+    </ng-container>
+
+    <!--Action Column -->
+    <ng-container matColumnDef="action">
+      <mat-header-cell *matHeaderCellDef> Action </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <!-- <button mat-raised-button (click)="clickStart(element.name)" class="actionButton">
+          <mat-icon mat-list-icon>
+            play_circle_outline</mat-icon>
+        </button>
+        <button mat-raised-button (click)="clickPause(element.name)" class="actionButton">
+          <mat-icon mat-list-icon>
+            pause_circle_outline</mat-icon>
+        </button>
+        <button mat-raised-button (click)="clickRestartConnector(element.name)" class="actionButton">
+          <mat-icon mat-list-icon>replay</mat-icon>
+          Connector
+        </button>
+        <button mat-raised-button (click)="clickRestartTask(element.name)" class="actionButton">
+          <mat-icon mat-list-icon>replay</mat-icon> Task
+        </button> -->
+
+        <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="connectors action button">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="clickStart(element.name)">
+            <mat-icon mat-list-icon>
+              play_circle_outline</mat-icon>
+            <span>Start</span>
+          </button>
+          <button mat-menu-item (click)="clickPause(element.name)">
+            <mat-icon mat-list-icon>
+              pause_circle_outline</mat-icon>
+            <span>Pause</span>
+          </button>
+          <button mat-menu-item (click)="clickRestartConnector(element.name)">
+            <mat-icon mat-list-icon>replay</mat-icon>
+            <span>Restart Connector</span>
+          </button>
+          <button mat-menu-item (click)="clickRestartTask(element.name)">
+            <mat-icon mat-list-icon>replay</mat-icon>
+            <span>Restart Task</span>
+          </button>
+          <button mat-menu-item (click)="deleteConnector(element.name)">
+            <mat-icon mat-list-icon>delete</mat-icon>
+            <span>Delete Connector</span>
+          </button>
+          <button mat-menu-item (click)="testGetConnectorInfo(element.name)">
+            <mat-icon mat-list-icon>info</mat-icon>
+            <span>Connector Info</span>
+          </button>
+        </mat-menu>
+
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+</div>
